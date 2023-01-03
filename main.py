@@ -1,3 +1,4 @@
+import copy
 class GameBoard(object):
     def __init__(self, battleships, width, height) -> None:
         self.battleships = battleships;
@@ -100,26 +101,40 @@ def renderGame(game_board, show_battleships = False):
 
 
 if __name__ == '__main__':
+    
     battleships = [BattleShip.build((1,1), 2, "N"),
                    #BattleShip.build((5,8), 5, "N"),
                    #BattleShip.build((2,3), 4, "E")
                    ]
 
-    game_board = GameBoard(battleships, 10, 10);
+    game_boards = [GameBoard(battleships, 10, 10),
+                   GameBoard(copy.deepcopy(battleships), 10, 10),
+                   ];
+
+    player_names = ["Frank", "AI"]
+    
+    off_idx = 0;
 
     while True:
+        def_idx = (off_idx + 1) % 2; 
+
+        defensive_board = game_boards[def_idx];
         #TODO: deal with invalid inputs 
+
+        print("%s YOUR TURN!" % player_names[off_idx])
+        
         inp = input("Where do you want to shoot?\n");
         xStr, yStr = inp.split(",");
         x = int(xStr);
         y = int(yStr);
 
-        game_board.take_shot((x,y))
-        renderGame(game_board)
+        defensive_board.take_shot((x,y))
+        renderGame(defensive_board)
 
-        if game_board.is_game_over():
-            print("YOU WIN!");
+        if defensive_board.is_game_over():
+            print("%s WINS!" % player_names[off_idx]);
             break
 
+        off_idx = def_idx;
 
 
