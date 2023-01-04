@@ -9,16 +9,19 @@ class GameBoard(object):
         self.height = height;
 
     def take_shot(self, shot_location):
+        hit_battleship = None
         is_hit = False;
         for b in self.battleships:
             idx = b.body_index(shot_location);
             if idx is not None:
                 is_hit = True;
                 b.hits[idx] = True;
+                hit_battleship = b
                 break;
         
         self.shots.append(Shot(shot_location, is_hit));
-    
+        return hit_battleship
+
     def is_game_over(self):
         for b in self.battleships:
             if not b.is_destroyed():
@@ -52,7 +55,7 @@ class BattleShip(object):
             body.append(el)
         return BattleShip(body, direction);
             
-    def __init__(self, body, head, length, direction):
+    def __init__(self, body, direction):
         self.body = body;
         self.direction = direction
         self.hits = [False] * len(body);
@@ -127,6 +130,21 @@ def renderGame(game_board, show_battleships = False):
 
     print(display);
 
+def  announce(event_type,  metadata = {}):
+    if event_type == 'game_over':
+        print('%s WINS THE GAME!'% metadata['player'])
+    elif event_type == 'new_turn':
+         print('%s YOUR TURN!'% metadata['player'])
+    elif event_type == 'miss':
+         print('%s MISSED!'% metadata['player'])
+    elif event_type == 'battleship_destroyed':
+         print('%s DESTROYED a battleship!'% metadata['player'])
+    elif event_type == 'battleship_hit':
+         print('%s HIT a battleship!'% metadata['player'])
+    else:
+        print("UNKNOWN EVENT TYPE: " % event_type)
+    
+
 def get_random_ai_shot(game_board):
     x = random.randint(0, game_board.width - 1)
     y = random.randint(0, game_board.height - 1)
@@ -139,12 +157,7 @@ def get_human_shot(game_board):
      y = int(yStr);
      return (x, y)
 
-    
-
-
-
-if __name__ == '__main__':
-    
+def run():
     battleships = [BattleShip.build((1,1), 2, "S"),
                    BattleShip.build((5,8), 5, "N"),
                    BattleShip.build((2,3), 4, "E")
@@ -166,16 +179,29 @@ if __name__ == '__main__':
         offensive_player = players[off_idx];
         #TODO: deal with invalid inputs 
 
-        print("%s YOUR TURN!" % offensive_player.name)
+        announce("new_turn", {'player': offensive_player.name})
         shot_location = offensive_player.shot_f(defensive_board)
         
-        defensive_board.take_shot(shot_location)
+        hit_battleship = defensive_board.take_shot(shot_location)
+        if hit_battleship is None:
+            announce("miss", {'player': offensive_player.name})
+        else:
+            if hit_battleship.is_destroyed():
+                announce("battleship_destroyed", {'player': offensive_player.name})
+            else:
+                announce("battle_hit", {'player': offensive_player.name})
         renderGame(defensive_board)
 
         if defensive_board.is_game_over():
+            announce({"game_over", {'player': offensive_player.name}})
             print("%s WINS!" % offensive_player.name);
             break
 
         off_idx = def_idx;
+
+if __name__ == '__main__':
+    run()
+    
+   
 
 
